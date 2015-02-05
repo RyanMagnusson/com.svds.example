@@ -68,7 +68,7 @@ However it is possible to override these defaults. The following options are sup
 
 Usage
 -----
-	iptool -cp...  com.svds.example.accesslog.Main --input /tmp/catalina.out --output ~/mycopy.log --pipe --maxmind
+	java -cp...  com.svds.example.accesslog.Main --input /tmp/catalina.out --output ~/mycopy.log --pipe --maxmind
 In this example:
 * The class that is executed is com.svds.example.accesslog.Main. 
 * The input file is found at "/tmp/catalina.out". 
