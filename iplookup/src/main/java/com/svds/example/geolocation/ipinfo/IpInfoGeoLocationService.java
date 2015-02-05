@@ -32,26 +32,8 @@ public class IpInfoGeoLocationService implements GeoLocationService {
 	
 	private static final String DEFAULT_URI = "http://ipinfo.io/";
 	
-	private volatile String uri;
-	public void setURI(String uri) { synchronized(this) { this.uri = uri; } }
-	public void setURI(URI uri) { 
-		String address = null == uri ? null : uri.toString();
-		synchronized(this) { 
-			this.uri = address; 
-		} 
-	}
-	
 	public String getURI() {
-		String address = uri;
-		if (StringUtils.isBlank(address)) {
-			synchronized(this) {
-				address = uri;
-				if (StringUtils.isBlank(address)) {
-					uri = address = DEFAULT_URI;
-				}
-			}
-		}
-		return address;
+		return DEFAULT_URI;
 	}
 	
 	private GeoLocationDAO dao;
@@ -67,8 +49,7 @@ public class IpInfoGeoLocationService implements GeoLocationService {
 	public IpInfoGeoLocationService() {}
 	
 	@Inject
-	public IpInfoGeoLocationService(@ServiceURI String uri, GeoLocationDAO dao) {
-		this.uri = uri;
+	public IpInfoGeoLocationService(GeoLocationDAO dao) {
 		this.dao = dao;
 	}
 	
@@ -83,6 +64,7 @@ public class IpInfoGeoLocationService implements GeoLocationService {
 		if (null != location) { return location; }
 		
 		location = new GeoLocation();
+		location.setIpAddress(ipAddress);
 		ClientConfig config = new ClientConfig();
 	    Client client = ClientBuilder.newClient(config);
 	    URI uri = UriBuilder.fromUri(getURI()).build();

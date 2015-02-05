@@ -16,17 +16,26 @@ import com.google.inject.Injector;
 import com.svds.example.accesslog.GeoLocation;
 import com.svds.example.accesslog.GeoLocationException;
 import com.svds.example.accesslog.GeoLocationService;
+import com.svds.example.annotations.DatabaseFile;
+import com.svds.example.annotations.ServiceURI;
+import com.svds.example.geolocation.GeoLocationDAO;
+import com.svds.example.geolocation.sqlite.SqliteGeoLocationDAO;
 
 public class IntegratedTest_When_Calling_The_IpInfo_GeoLocation_Service_For_A_Valid_IP_Address {
 
 	private Logger logger = LogManager.getLogger();
 	private Injector guice;
 	private static final String ipAddress = "64.132.218.186";
+	private static final String DATA_DIRECTORY = "target/data/";
+	private static final String DATABASE_FILE = DATA_DIRECTORY + "geolocations.sqlite";
 	
 	static class GuiceModule extends AbstractModule {
 
 		@Override
 		protected void configure() {
+			bindConstant().annotatedWith(ServiceURI.class).to("http://ipinfo.io");
+			bindConstant().annotatedWith(DatabaseFile.class).to(DATABASE_FILE);
+			bind(GeoLocationDAO.class).to(SqliteGeoLocationDAO.class);
 			bind(GeoLocationService.class).to(IpInfoGeoLocationService.class);
 		}
 	}

@@ -34,51 +34,50 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.svds.example.accesslog.Main.CommandLineOptions.Argument;
+import com.svds.example.accesslog.AppConfig.Argument;
 import com.svds.example.geolocation.ipinfo.IpInfoGeoLocationService;
 
 public class Main {
 
 	private static final Logger logger = LogManager.getLogger();
-	private LogReader reader;
-	private LogWriter writer;
-	private GeoLocationService geoLocator;
-	
 	private static final String DEFAULT_OUTPUT_FILENAME = "access_log.out";
 	private static final String DEFAULT_INPUT_FILENAME = "access.log";
 	
+	private LogWriter writer;
+	private LogReader reader;
+	private GeoLocationService geoLocationService;
 	
 	public Main() {}
 	
 	static class GuiceModule extends AbstractModule {
-		
+		private AppConfig config;
 		
 		public GuiceModule() {}
 		
-		public GuiceModule(String inFile, String outFile) {
-			this.outputFileName = outFile;
-			this.inputFileName = inFile;
+		public GuiceModule(AppConfig config) {
+			this.config = config;
 		}
 		
 		private Writer setupOutputWriter() {
-			File fOut = new File(outputFileName);
+			 
+			File fOut = new File(config.getOutputFile());
 			try {
 				return new BufferedWriter(new FileWriter(fOut));
 			}
 			catch (IOException e) {
 				throw new ContextedRuntimeException("An IOException was thrown while setting up the output file.\n" + ExceptionUtils.getMessage(e),e)
-								.addContextValue("file", outputFileName);
+								.addContextValue("file", config.getOutputFile());
 			}
 		}
 		
 		private Reader setupInputReader() {
-			File f = new File(inputFileName);
+			File f = new File(config.getInputFile());
 			try {
 				return new BufferedReader(new FileReader(f));
 			}
 			catch (IOException e) {
 				throw new ContextedRuntimeException("An IOException was thrown while setting up the input file.\n" + ExceptionUtils.getMessage(e),e)
-								.addContextValue("file", inputFileName);
+								.addContextValue("file", config.getInputFile());
 			}
 		}
 		
@@ -100,150 +99,12 @@ public class Main {
 		}
 	}
 	
-	static class CommandLineOptions {
-		
-		private static final Options OPTIONS = initOptions();
-		
-		public enum Argument {
-			  DATABASE_FILE("database")
-			, INPUT_FILE("input")
-			, OUTPUT_FILE("output")
-			, USE_MAXMIND("maxmind")
-			, USE_IPINFO("ipinfo")
-			;
-			
-			
-			private String ref;
-			private Option option;
-			private Argument(String name) {
-				this.ref = name;
-			}
-			
-			public static final Argument fromString(String text) {
-				if (StringUtils.isBlank(text)) { return null; }
-				
-				final String trimmed = text.trim();
-				for (Argument arg : values()) {
-					if (arg.ref.equalsIgnoreCase(trimmed)
-							|| arg.ref.equalsIgnoreCase(arg.name())) {
-						return arg;
-					}
-				}
-				return null;
-			}
-		}
-		
-		private static final Options initOptions() {
-			  Options opts = new Options();
-			  opts.addOption(OptionBuilder.isRequired(false).hasArg().withDescription("The path or name of the file to use for storing GeoLocation data").create(Argument.DATABASE_FILE.ref));
-			  opts.addOption(OptionBuilder.isRequired(false).hasArg().withDescription("The path or name of the file to read").create(Argument.INPUT_FILE.ref));
-			  opts.addOption(OptionBuilder.isRequired(false).hasArg().withDescription("The path or name of the file to write to").create(Argument.OUTPUT_FILE.ref));
-			  opts.addOption(OptionBuilder.isRequired(false).hasArg(false).withDescription("Tells iplookup to use the local MaxMind database. This option is mutually exclusive with the --use-ipinfo option and the program will abort if both are set").create(Argument.USE_MAXMIND.ref));
-			  opts.addOption(OptionBuilder.isRequired(false).hasArg(false).withDescription("Tells iplookup to use the ipinfo REST service. This option is mutually exclusive with the --use-maxmind option and the program will abort if both are set").create(Argument.USE_IPINFO.ref));
-			  return opts;
-		}
-		
-		public static Map<Argument,String> parse(String[] args) throws ParseException {
-			Map<Argument,String> map = new HashMap<Argument,String>();
-			if (ArrayUtils.isEmpty(args)) {
-				return map;
-			}
-			
-			CommandLineParser parser = new GnuParser();
-			CommandLine cmd = parser.parse(OPTIONS, args);
-			for (Option opt : cmd.getOptions()) {
-				if (cmd.hasOption(opt.getOpt())) {
-					Argument arg = Argument.fromString(opt.getOpt());
-					if (!opt.hasArg()) {
-						map.put(arg, "true");
-					}
-					else {
-						map.put(arg, cmd.getOptionValue(opt.getOpt()));
-					}
-				}
-			}
-			return map;
-		}
-		
-	}
 	
-	private enum GeoLocationServiceChoice {
-		MAXMIND, IPINFO;
-	}
 	
-	private String databaseFile;
-	private String inputFile;
-	private String outputFile;
-	private GeoLocationServiceChoice serviceChoice;
 	
-	public boolean useMaxMind() {
-		return serviceChoice == GeoLocationServiceChoice.MAXMIND;
-	}
-	
-	public boolean useIpInfo() {
-		switch(serviceChoice) {
-			case MAXMIND: return false;
-			default: return true;
-		}
-	}
-	
-	public void setServiceChoice(GeoLocationServiceChoice whichService) {
-		this.serviceChoice = whichService;
-	}
-	
-	public GeoLocationServiceChoice getServiceChoice() {
-		return this.serviceChoice;
-	}
-	
-	public Main bootstrap(String[] args) {
-		Map<Argument,String> options = null;
-		try {
-			options = CommandLineOptions.parse(args);
-		} catch (ParseException e) {
-			throw new ContextedRuntimeException("Unable to parse the command-line options",e)
-							.addContextValue("commandline", StringUtils.join(args,' '));
-		}
-		
-		final String dbFileName = options.get(Argument.DATABASE_FILE);
-		this.databaseFile = StringUtils.isBlank(dbFileName) ? null : dbFileName;
-		
-		final String inFileName = options.get(Argument.INPUT_FILE);
-		this.inputFile = StringUtils.isBlank(inFileName) ? DEFAULT_INPUT_FILENAME : inFileName;
-		File f = new File(inputFile);
-		if (f.exists() && f.isDirectory()) {
-			if (!this.inputFile.endsWith(File.pathSeparator)) {
-				this.inputFile += File.pathSeparator;
-			}
-			this.inputFile += DEFAULT_INPUT_FILENAME;
-		}
-		
-		final String outFileName = options.get(Argument.OUTPUT_FILE);
-		this.outputFile = StringUtils.isBlank(outFileName) ? DEFAULT_OUTPUT_FILENAME : outFileName;
-		f = new File(outputFile);
-		if (f.exists() && f.isDirectory()) {
-			if (!this.outputFile.endsWith(File.pathSeparator)) {
-				this.outputFile += File.pathSeparator;
-			}
-			this.inputFile += DEFAULT_OUTPUT_FILENAME;
-		}
-		
-		if (options.containsKey(Argument.USE_MAXMIND)) {
-			if (options.containsKey(Argument.USE_IPINFO)) {
-				throw new ContextedRuntimeException("The ipinfo service and MaxMind local database cannot be used at the same time. Please choose just one.");
-			}
-			this.serviceChoice = GeoLocationServiceChoice.MAXMIND;
-		}
-		else {
-			this.serviceChoice = GeoLocationServiceChoice.IPINFO;
-		}
-		
-		return this;
-	}
 	
 	public Main shutdown() {
-		
 		if (null != writer) { try { writer.close(); } catch (Exception e) { /* eat it */ } }
-		
 		return this;
 	}
 	
@@ -251,14 +112,14 @@ public class Main {
 	Main(LogReader reader, LogWriter writer, GeoLocationService service) {
 		this.reader = reader;
 		this.writer = writer;
-		this.geoLocator = service;
+		this.geoLocationService = service;
 	}
 	
 	public static void main(String[] args) throws Exception {
-		Injector guice = Guice.createInjector(new GuiceModule("src/main/resources/access.log", "access_log.out"));
+		AppConfig config = AppConfig.fromArguments(args);
+		Injector guice = Guice.createInjector(new GuiceModule(config));
 		 
 		Main m = guice.getInstance(Main.class);
-		m.bootstrap();
 		try {
 			m.execute();
 		}
@@ -281,7 +142,7 @@ public class Main {
 		out.setHttpReferer(in.getHttpReferer());
 		out.setWhenRequestProcessed(in.getWhenRequestProcessed());
 		try {
-			GeoLocation location = geoLocator.find(in.getRemoteHost());
+			GeoLocation location = geoLocationService.find(in.getRemoteHost());
 			out.setGeoLocation(location);
 			if (null == location) {
 				logger.info("No GeoLocation data was returned for IP address: " + in.getRemoteHost());
