@@ -44,10 +44,40 @@ The [IpInfo API documentation](https://ipinfo.io/developers) states that a calle
 
 Building
 --------
-This project uses Maven for project management. By default calling "mvn package" will create a standard JAR that you will still need to identify the classpath for when running. 
+Maven is used for managing this project and it is possible to build one of three different JAR modules depending on your needs.
 
-If you want to create an executabe JAR, with the classpath and main class embedded in its manifest, you should execute "mvn package -P executable-jar". Running the module created from this will require that all the dependencies be located in a "lib" folder off from where the module is located.  
+### Standard JAR
+A standard JAR can be built by calling:
+```bash
+mvn package
+```
 
+This produces a file that can be executed using:
+```bash
+java -cp [CLASSPATH] com.svds.example.accesslog.Main [options]
+```
+
+### Skinny Executable
+A skinny executable JAR can be built by calling: 
+```bash
+mvn package -P execjar [-Dexecutable.jar.classpath.prefix=...]
+```
+
+This produces a file that can be executed using:
+```bash
+java -jar iplookup-[VERSION].jar
+```
+
+By convention this still requires all of the dependency libraries to be found next to where the program executes from.
+However this can be overridden to a specific directory by passing `-Dexecutable.jar.classpath.prefix=[path]` when building the file.
+
+### Uber or Fat JAR
+An uberjar or fatjar, which is a JAR that contains all of the dependencies embedded, can be created by calling:
+```bash
+mvn package -P uberjar
+``` 
+
+### Sample Log File
 For testing and doing any simple validation an example log file is saved at "test/resources/sample.log".
 
 
@@ -72,7 +102,7 @@ However it is possible to override these defaults. The following options are sup
 
 Usage
 -----
-	java -cp...  com.svds.example.accesslog.Main --input /tmp/catalina.out --output ~/mycopy.log --pipe --maxmind
+```java -cp...  com.svds.example.accesslog.Main --input /tmp/catalina.out --output ~/mycopy.log --pipe --maxmind```
 In this example:
 * The class that is executed is com.svds.example.accesslog.Main. 
 * The input file is found at "/tmp/catalina.out". 
