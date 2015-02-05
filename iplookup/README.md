@@ -44,8 +44,10 @@ The [IpInfo API documentation](https://ipinfo.io/developers) states that a calle
 
 Building
 --------
-This project uses Maven for project management. You should just need to run "mvn package" at the iplookup folder to build an executable jar.
-For testing and simple validation, a sample log file is saved at "test/resources/sample.log".
+This project uses Maven for project management. By default calling "mvn package" will create a standard JAR that you will still need to identify the classpath for when running. If you want to create an executabe JAR, with the classpath and main class embedded in its manifest, you should execute "mvn package -P executable-jar".  
+
+For testing and doing any simple validation an example log file is saved at "test/resources/sample.log".
+
 
 Running
 -------
