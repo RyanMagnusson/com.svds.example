@@ -11,6 +11,7 @@ import java.io.Writer;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ContextedRuntimeException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -125,7 +126,7 @@ public class Main {
 			}
 			else {
 				bindConstant().annotatedWith(ServiceURI.class).to("http://ipinfo.io");
-				bindConstant().annotatedWith(DatabaseFile.class).to(config.getDatabaseFile());
+				bindConstant().annotatedWith(DatabaseFile.class).to(ObjectUtils.toString(config.getDatabaseFile(),"").trim());
 				bind(GeoLocationDAO.class).to(SqliteGeoLocationDAO.class).in(Scopes.SINGLETON);
 				bind(GeoLocationService.class).to(IpInfoGeoLocationService.class);
 			}
