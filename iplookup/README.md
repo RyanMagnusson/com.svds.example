@@ -18,7 +18,7 @@ The layout of the new file is:
 
 Local Database
 --------------
-The first uses a local file that can be downloaded from http://dev.maxmind.com/geoip/geoip2/geolite2/.
+My first attempt was to try using a local database file. You can download the file from http://dev.maxmind.com/geoip/geoip2/geolite2/.
 Please download the MaxMind GeoLite2 city database file in order to execute this process.
 
 Unfortunately the city database file only provides the location data, and does not provide any information about the ISP or organization. MaxMind only provides the ISP data after purchasing a license, so was not able to collect this for my output file. However the logic to read the ISP database file was still implemented in case it was available to someone using this program.
