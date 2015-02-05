@@ -7,6 +7,28 @@
   <artifactId>iplookup</artifactId>
   <version>0.0.1-SNAPSHOT</version>
    
+   <profiles>
+   	<profile>
+   		<id>executable-jar</id>
+   		<build>
+   			<plugins>
+   				<plugin>
+	            <groupId>org.apache.maven.plugins</groupId>
+	            <artifactId>maven-jar-plugin</artifactId>
+	            <configuration>
+	                <archive>
+	                    <addClasspath>true</addClasspath>
+              			<mainClass>com.svds.example.accesslog.Main</mainClass>
+	                </archive>
+	            </configuration>
+   				</plugin>
+   			</plugins>
+   		</build>
+   	</profile>
+   
+   </profiles>
+   
+   
    <build>
 		<plugins>
 			<plugin>
