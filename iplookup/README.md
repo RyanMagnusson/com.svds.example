@@ -21,7 +21,7 @@ Local Database
 My first attempt was to try using a local database file. You can download the file from http://dev.maxmind.com/geoip/geoip2/geolite2/.
 Please download the MaxMind GeoLite2 city database file in order to execute this process.
 
-Unfortunately the city database file only provides the location data, and does not provide any information about the ISP or organization. MaxMind only provides the ISP data after purchasing a license, so was not able to collect this for my output file. However the logic to read the ISP database file was still implemented in case it was available to someone using this program.
+Unfortunately the city database file only provides the location data, and does not provide any information about the ISP or organization. MaxMind only provides the ISP data after purchasing a license, so I was not able to collect this for my output file. However the logic to read the ISP database file was still implemented in case it was available to someone using this program.
 
 NOTE: because the ISP file is likely not available, iplookup will graciously just ignore trying to read that file without throwing an error. However iplookup will abort with an error if the City database file cannot be found.
 
@@ -42,8 +42,6 @@ Note: I was still not able to collect the ISP name from this service.
 
 The [IpInfo API documentation](https://ipinfo.io/developers) states that a caller is restricted to just 1,000 requests per day. To avoid exceeding this limit a Sqlite database is used to store the results from every service call, and then checked before the next service call.  
 
-
-
 Building
 --------
 This project uses Maven for project management. You should just need to run "mvn package" at the iplookup folder to build an executable jar.
@@ -52,7 +50,6 @@ For testing and simple validation, a sample log file is saved at "test/resources
 Running
 -------
 Before running the complete log file can be downloaded from: https://github.com/silicon-valley-data-science/datasets/blob/master/access.log 
-
 
 By default iplookup is setup to:
 * read a file named "access.log" from the current directory
