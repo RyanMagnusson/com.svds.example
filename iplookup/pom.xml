@@ -24,6 +24,7 @@
 	                <archive>
 	                    <manifest>
                             <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib</classpathPrefix>
                             <mainClass>com.svds.example.accesslog.Main</mainClass>
                         </manifest>
 	                </archive>
@@ -33,7 +34,6 @@
    		</build>
    	</profile>
    </profiles>
-   
    
    <build>
 		<plugins>
