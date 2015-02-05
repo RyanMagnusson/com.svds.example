@@ -11,6 +11,7 @@ import java.io.Writer;
 
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ContextedRuntimeException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +24,8 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import com.svds.example.annotations.DatabaseFile;
+import com.svds.example.annotations.ServiceURI;
 import com.svds.example.geolocation.GeoLocationDAO;
 import com.svds.example.geolocation.ipinfo.IpInfoGeoLocationService;
 import com.svds.example.geolocation.maxmind.MaxMindGeoLocator;
@@ -93,9 +96,36 @@ public class Main {
 			bind(LogWriter.class).to(AccessLogWriter.class);
 			
 			if (config.useMaxMind()) {
+				String pathToCityDB = config.getDatabaseFile();
+				if (StringUtils.isNotBlank(pathToCityDB)) {
+					if (!pathToCityDB.endsWith("/")) {
+						pathToCityDB += '/';
+					}
+					pathToCityDB += "GeoLite2-City.mmdb";
+				}
+				else {
+					pathToCityDB = "GeoLite2-City.mmdb";
+				}
+				File cityDbFile = new File(pathToCityDB);
+				bind(File.class).annotatedWith(Names.named("MaxMind city")).toInstance(cityDbFile);
+				
+				String pathToIspDB = config.getDatabaseFile();
+				if (StringUtils.isNotBlank(pathToIspDB)) {
+					if (!pathToIspDB.endsWith("/")) {
+						pathToIspDB += '/';
+					}
+					pathToIspDB += "GeoLite2-Isp.mmdb";
+				}
+				else {
+					pathToIspDB = "GeoLite2-Isp.mmdb";
+				}
+				File ispDbFile = new File(pathToIspDB);
+				bind(File.class).annotatedWith(Names.named("MaxMind isp")).toInstance(ispDbFile);
 				bind(GeoLocationService.class).to(MaxMindGeoLocator.class);	
 			}
 			else {
+				bindConstant().annotatedWith(ServiceURI.class).to("http://ipinfo.io");
+				bindConstant().annotatedWith(DatabaseFile.class).to(config.getDatabaseFile());
 				bind(GeoLocationDAO.class).to(SqliteGeoLocationDAO.class).in(Scopes.SINGLETON);
 				bind(GeoLocationService.class).to(IpInfoGeoLocationService.class);
 			}

@@ -10,6 +10,8 @@ import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
@@ -19,12 +21,15 @@ import com.maxmind.geoip2.record.Location;
 import com.svds.example.accesslog.GeoLocation;
 import com.svds.example.accesslog.GeoLocationException;
 import com.svds.example.accesslog.GeoLocationService;
+import com.svds.example.annotations.MaxMindDB;
+import com.svds.example.annotations.MaxMindDB.Type;
 
 /**
  * @author rmagnus
  */
 public class MaxMindGeoLocator implements GeoLocationService {
 
+	private Logger logger = LogManager.getLogger();
 	private File cityDbFile;
 	private volatile DatabaseReader cityDbReader;
 	private File ispDbFile;
@@ -36,7 +41,7 @@ public class MaxMindGeoLocator implements GeoLocationService {
 	public MaxMindGeoLocator() {}
 	
 	@Inject
-	private MaxMindGeoLocator(@Named("cityGeoDb") File cityDB, @Named("ispGeoDb") File ispDB) {
+	private MaxMindGeoLocator(@Named("MaxMind city") File cityDB, @Named("MaxMind isp") File ispDB) {
 		this.cityDbFile = cityDB;
 		this.ispDbFile = ispDB;
 	}
@@ -116,22 +121,30 @@ public class MaxMindGeoLocator implements GeoLocationService {
 			throw new GeoLocationException("GeoIp2Exception querying the GeoLocation database about a city for an IP address.\n" + ExceptionUtils.getMessage(e),e).setContextValue("ipAddress", ipAddress);
 		}
 
-		DatabaseReader ispReader = null;
-		try {
-			ispReader = getIspDbReader();
-		} catch (IOException e) {
-			throw new GeoLocationException("IOException trying to build a new database.\n" + ExceptionUtils.getMessage(e),e).setContextValue("ipAddress", ipAddress);
+		if (null == getIspDatabase()) {
+			logger.trace("Unable to find the ISP database.");
 		}
-		
-		try {
-			IspResponse response = ispReader.isp(inetAddr);
-			result.setOrganization(response.getOrganization());
-			result.setNameOfIsp(response.getIsp());
-		} 
-		catch (IOException e) {
-			throw new GeoLocationException("IOException querying the GeoLocation database about the ISP for an IP address.\n" + ExceptionUtils.getMessage(e),e).setContextValue("ipAddress", ipAddress);
-		} catch (GeoIp2Exception e) {
-			throw new GeoLocationException("GeoIp2Exception querying the GeoLocation database about the ISP for an IP address.\n" + ExceptionUtils.getMessage(e),e).setContextValue("ipAddress", ipAddress);
+		else if (getIspDatabase().canRead()) {
+			DatabaseReader ispReader = null;
+			try {
+				ispReader = getIspDbReader();
+			} catch (IOException e) {
+				throw new GeoLocationException("IOException trying to build a new database.\n" + ExceptionUtils.getMessage(e),e).setContextValue("ipAddress", ipAddress);
+			}
+			
+			try {
+				IspResponse response = ispReader.isp(inetAddr);
+				result.setOrganization(response.getOrganization());
+				result.setNameOfIsp(response.getIsp());
+			} 
+			catch (IOException e) {
+				throw new GeoLocationException("IOException querying the GeoLocation database about the ISP for an IP address.\n" + ExceptionUtils.getMessage(e),e).setContextValue("ipAddress", ipAddress);
+			} catch (GeoIp2Exception e) {
+				throw new GeoLocationException("GeoIp2Exception querying the GeoLocation database about the ISP for an IP address.\n" + ExceptionUtils.getMessage(e),e).setContextValue("ipAddress", ipAddress);
+			}
+		}
+		else {
+			logger.debug("Cannot open the ISP database at {}",getIspDatabase());
 		}
 		
 		return result;
