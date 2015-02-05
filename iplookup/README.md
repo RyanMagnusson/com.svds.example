@@ -23,6 +23,8 @@ Please download the MaxMind GeoLite2 city database file in order to execute this
 
 Unfortunately the city database file only provides the location data, and does not provide any information about the ISP or organization. MaxMind only provides the ISP data after purchasing a license, so was not able to collect this for my output file. However the logic to read the ISP database file was still implemented in case it was available to someone using this program.
 
+NOTE: because the ISP file is likely not available, iplookup will graciously just ignore trying to read that file without throwing an error. However iplookup will abort with an error if the City database file cannot be found.
+
 Calling A WebService
 --------------------
 After realizing I could not collect the ISP information, I then created an alternative class: IpInfoGeoLocationService that calls the IpInfo [web-service](http://ipinfo.io). 
