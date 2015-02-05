@@ -65,7 +65,7 @@ public class InputRecordParser implements Parser {
 				logger.warn("The request token does not match the expected regex pattern: " + request);
 			}
 			else {
-				logger.debug("The line is a match: {}", request);
+				//logger.debug("The line is a match: {}", request);
 				record.setHttpMethod(reqMatch.group("method"));
 				record.setClientRequestUri(reqMatch.group("uri"));
 				record.setHttpVersion(reqMatch.group("version"));
@@ -103,7 +103,7 @@ public class InputRecordParser implements Parser {
 		if (StringUtils.isNotBlank(referer)) {
 			final String trimmed = referer.trim();
 			if ("-".equalsIgnoreCase(trimmed)) {
-				logger.debug("The parsed referer address was recorded as a hyphen. A null reference will be used instead.");
+				logger.trace("The parsed referer address was recorded as a hyphen. A null reference will be used instead.");
 			}
 			else {
 				record.setHttpReferer(trimmed);
@@ -121,7 +121,7 @@ public class InputRecordParser implements Parser {
 		
 		final String trimmed = text.trim();
 		if ("-".equalsIgnoreCase(trimmed)) {
-			logger.debug("The parsed text value was recorded as a hyphen. A null reference will be used instead.");
+			logger.trace("The parsed text value was recorded as a hyphen. A null reference will be used instead.");
 			return null;
 		}
 		
@@ -135,7 +135,7 @@ public class InputRecordParser implements Parser {
 		final String trimmed = text.trim();
 		
 		if ("-".equals(trimmed)) {
-			logger.debug("The parsed value was recorded as a hyphen, returning a null reference.");
+			logger.trace("The parsed value was recorded as a hyphen, returning a null reference.");
 			return null;
 		}
 		

@@ -30,7 +30,6 @@ public class MaxMindGeoLocator implements GeoLocationService {
 	private File ispDbFile;
 	private volatile DatabaseReader ispDbReader;
 	
-	
 	/**
 	 * 
 	 */

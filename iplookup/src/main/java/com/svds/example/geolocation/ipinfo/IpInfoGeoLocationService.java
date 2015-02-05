@@ -11,6 +11,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
 
 import com.google.gson.Gson;
@@ -18,7 +20,6 @@ import com.google.gson.JsonObject;
 import com.svds.example.accesslog.GeoLocation;
 import com.svds.example.accesslog.GeoLocationException;
 import com.svds.example.accesslog.GeoLocationService;
-import com.svds.example.annotations.ServiceURI;
 import com.svds.example.geolocation.GeoLocationDAO;
 
 /**
@@ -29,7 +30,7 @@ public class IpInfoGeoLocationService implements GeoLocationService {
 
 	//private final Map<String,GeoLocation> locations = new HashMap<String,GeoLocation>();
 	
-	
+	private Logger logger = LogManager.getLogger();
 	private static final String DEFAULT_URI = "http://ipinfo.io/";
 	
 	public String getURI() {
@@ -61,7 +62,10 @@ public class IpInfoGeoLocationService implements GeoLocationService {
 		if (StringUtils.isBlank(ipAddress));
 		
 		GeoLocation location = getDAO().find(ipAddress);
-		if (null != location) { return location; }
+		if (null != location) { 
+			logger.trace("found a saved entry for IP address: {}",ipAddress);
+			return location; 
+		}
 		
 		location = new GeoLocation();
 		location.setIpAddress(ipAddress);
@@ -92,6 +96,7 @@ public class IpInfoGeoLocationService implements GeoLocationService {
 	    		}
 	    	}
 	    }
+	    logger.trace("Saving an entry for IP address: {}", ipAddress);
 	    dao.save(location);
 	    return location;
 	}

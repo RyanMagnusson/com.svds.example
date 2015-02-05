@@ -8,20 +8,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ContextedRuntimeException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -34,8 +23,10 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.svds.example.accesslog.AppConfig.Argument;
+import com.svds.example.geolocation.GeoLocationDAO;
 import com.svds.example.geolocation.ipinfo.IpInfoGeoLocationService;
+import com.svds.example.geolocation.maxmind.MaxMindGeoLocator;
+import com.svds.example.geolocation.sqlite.SqliteGeoLocationDAO;
 
 public class Main {
 
@@ -89,12 +80,26 @@ public class Main {
 			bind(new TypeLiteral<JsonSerializer<GeoLocation>>() {}).to(GeoLocation.GsonAdapter.class).in(Scopes.SINGLETON);
 			bind(new TypeLiteral<JsonSerializer<OutputRecord>>() {}).to(OutputRecord.GsonAdapter.class).in(Scopes.SINGLETON);
 			bind(new TypeLiteral<JsonSerializer<InputRecord>>() {}).to(InputRecord.GsonAdapter.class).in(Scopes.SINGLETON);
-			//bind(new TypeLiteral<Formatter<OutputRecord>>() {}).to(OutputRecordJsonFormatter.class).in(Scopes.SINGLETON);
-			bind(new TypeLiteral<Formatter<OutputRecord>>() {}).to(OutputRecordPipeDelimitedFormatter.class).in(Scopes.SINGLETON);
+			
+			if (AppConfig.OutputFormatChoice.PIPE_DELIMITED == config.getFormatChoice()) {
+				bind(new TypeLiteral<Formatter<OutputRecord>>() {}).to(OutputRecordPipeDelimitedFormatter.class).in(Scopes.SINGLETON);
+			}
+			else {
+				bind(new TypeLiteral<Formatter<OutputRecord>>() {}).to(OutputRecordJsonFormatter.class).in(Scopes.SINGLETON);
+			}
+			
 			bind(Parser.class).to(InputRecordParser.class);
 			bind(LogReader.class).to(AccessLogReader.class);
 			bind(LogWriter.class).to(AccessLogWriter.class);
-			bind(GeoLocationService.class).to(IpInfoGeoLocationService.class);
+			
+			if (config.useMaxMind()) {
+				bind(GeoLocationService.class).to(MaxMindGeoLocator.class);	
+			}
+			else {
+				bind(GeoLocationDAO.class).to(SqliteGeoLocationDAO.class).in(Scopes.SINGLETON);
+				bind(GeoLocationService.class).to(IpInfoGeoLocationService.class);
+			}
+			
 			bind(Main.class).asEagerSingleton();
 		}
 	}
