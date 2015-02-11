@@ -21,6 +21,8 @@ import com.svds.example.accesslog.GeoLocation;
 import com.svds.example.accesslog.GeoLocationException;
 import com.svds.example.accesslog.GeoLocationService;
 import com.svds.example.geolocation.GeoLocationDAO;
+import com.svds.example.geolocation.selenium.whatismyip.Ip2LocationResults;
+import com.svds.example.geolocation.selenium.whatismyip.IpAddressLabsResults;
 
 /**
  * @author rmagnus
@@ -59,7 +61,7 @@ public class IpInfoGeoLocationService implements GeoLocationService {
 	 */
 	@Override
 	public GeoLocation find(String ipAddress) throws GeoLocationException {
-		if (StringUtils.isBlank(ipAddress));
+		if (StringUtils.isBlank(ipAddress)) { return null; }
 		
 		GeoLocation location = getDAO().find(ipAddress);
 		if (null != location) { 

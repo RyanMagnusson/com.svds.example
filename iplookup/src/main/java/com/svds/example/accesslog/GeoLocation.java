@@ -38,8 +38,8 @@ public class GeoLocation
 	private String organization;
 	
 	private static final int DECIMAL_PRECISION = 7; 
-	public BigDecimal longitude;
-	public BigDecimal latitude;
+	private BigDecimal longitude;
+	private BigDecimal latitude;
 	
 	public String getIpAddress() {
 		return ipAddress;
